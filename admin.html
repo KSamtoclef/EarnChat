@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatEarn Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#0A0A0F;--card:#13131A;--border:#1E1E2E;
+    --green:#00C853;--green2:rgba(0,200,83,.12);
+    --blue:#2979FF;--yellow:#FFD600;--red:#FF5252;
+    --text:#F0F0F0;--muted:#888;--font:'Inter',system-ui,sans-serif;
+  }
+  body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+
+  /* LOGIN */
+  #loginWrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+  .login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;width:100%;max-width:360px;text-align:center;}
+  .login-logo{font-size:32px;margin-bottom:8px;}
+  .login-title{font-size:20px;font-weight:800;margin-bottom:4px;}
+  .login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+  .login-input{width:100%;background:#0A0A0F;border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-size:15px;outline:none;margin-bottom:12px;}
+  .login-btn{width:100%;background:var(--green);color:#000;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;}
+  .login-err{color:var(--red);font-size:13px;margin-top:8px;display:none;}
+
+  /* APP SHELL */
+  #appWrap{display:none;}
+  .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .topbar-brand{font-size:16px;font-weight:800;color:var(--green);}
+  .topbar-right{display:flex;gap:10px;align-items:center;}
+  .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;}
+
+  /* NAV TABS */
+  .nav{display:flex;gap:4px;padding:16px 16px 0;overflow-x:auto;}
+  .nav-tab{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.2s;}
+  .nav-tab.active{background:var(--green);color:#000;border-color:var(--green);}
+
+  /* MAIN */
+  .main{padding:16px;}
+
+  /* STATS ROW */
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  .stat-val{font-size:24px;font-weight:800;color:var(--green);}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  /* SECTION */
+  .section-title{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+  .refresh-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;}
+
+  /* SEARCH */
+  .search-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;}
+
+  /* CARDS */
+  .entry-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+  .entry-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .entry-meta{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+  .entry-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-approve{background:var(--green);color:#000;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-reject{background:var(--red);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-paid{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-ban{background:#333;color:var(--red);border:1px solid var(--red);border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+  .badge{display:inline-block;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
+  .badge-pending{background:rgba(255,214,0,.15);color:var(--yellow);}
+  .badge-approved{background:var(--green2);color:var(--green);}
+  .badge-rejected{background:rgba(255,82,82,.15);color:var(--red);}
+  .badge-paid{background:rgba(41,121,255,.15);color:var(--blue);}
+
+  /* EMPTY */
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
+
+  /* TOAST */
+  .admin-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--green);color:#000;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;transition:.3s;opacity:0;z-index:9999;}
+  .admin-toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+  /* LOADING */
+  .loading{text-align:center;padding:30px;color:var(--muted);}
+
+  /* SCREEN */
+  .screen-tab{display:none;}
+  .screen-tab.active{display:block;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo">🛡️</div>
+    <div class="login-title">ChatEarn Admin</div>
+    <div class="login-sub">Restricted access — authorised personnel only</div>
+    <input class="login-input" type="password" id="pwInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Access Panel →</button>
+    <div class="login-err" id="loginErr">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap">
+  <div class="topbar">
+    <div class="topbar-brand">⚡ ChatEarn Admin</div>
+    <div class="topbar-right">
+      <span style="font-size:12px;color:var(--muted)" id="lastRefresh"></span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-tab active" onclick="switchTab('overview')">📊 Overview</button>
+    <button class="nav-tab" onclick="switchTab('withdrawals')">💳 Withdrawals</button>
+    <button class="nav-tab" onclick="switchTab('kyc')">🔐 KYC</button>
+    <button class="nav-tab" onclick="switchTab('users')">👥 Users</button>
+    <button class="nav-tab" onclick="switchTab('shares')">📤 Shares</button>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div id="tab-overview" class="screen-tab active">
+      <div class="stats" id="statsGrid">
+        <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-val" id="statUsers">—</div></div>
+        <div class="stat-card"><div class="stat-label">Pending Withdrawals</div><div class="stat-val" id="statPendingWd">—</div></div>
+        <div class="stat-card"><div class="stat-label">Pending KYC</div><div class="stat-val" id="statPendingKyc">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Withdrawals</div><div class="stat-val" id="statTotalWd">—</div><div class="stat-sub" id="statTotalWdAmt"></div></div>
+        <div class="stat-card"><div class="stat-label">Share Clicks Today</div><div class="stat-val" id="statShares">—</div></div>
+        <div class="stat-card"><div class="stat-label">Paid Out</div><div class="stat-val" id="statPaidAmt">—</div></div>
+      </div>
+      <div class="section-title">Recent Withdrawals <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button></div>
+      <div id="recentWd"></div>
+    </div>
+
+    <!-- WITHDRAWALS -->
+    <div id="tab-withdrawals" class="screen-tab">
+      <div class="section-title">Withdrawal Requests <button class="refresh-btn" onclick="loadWithdrawals()">↻ Refresh</button></div>
+      <input class="search-input" placeholder="Search by name or account..." oninput="filterWithdrawals(this.value)">
+      <div id="wdFilter" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <button class="refresh-btn" onclick="setWdFilter('pending')" id="wdf-pending">Pending</button>
+        <button class="refresh-btn" onclick="setWdFilter('paid')" id="wdf-paid">Paid</button>
+        <button class="refresh-btn" onclick="setWdFilter('rejected')" id="wdf-rejected">Rejected</button>
+        <button class="refresh-btn" onclick="setWdFilter('all')" id="wdf-all">All</button>
+      </div>
+      <div id="wdList"></div>
+    </div>
+
+    <!-- KYC -->
+    <div id="tab-kyc" class="screen-tab">
+      <div class="section-title">KYC Submissions <button class="refresh-btn" onclick="loadKYC()">↻ Refresh</button></div>
+      <input class="search-input" placeholder="Search by name or email..." oninput="filterKYC(this.value)">
+      <div id="kycList"></div>
+    </div>
+
+    <!-- USERS -->
+    <div id="tab-users" class="screen-tab">
+      <div class="section-title">Registered Users <button class="refresh-btn" onclick="loadUsers()">↻ Refresh</button></div>
+      <input class="search-input" placeholder="Search by name or email..." oninput="filterUsers(this.value)">
+      <div id="userList"></div>
+    </div>
+
+    <!-- SHARES -->
+    <div id="tab-shares" class="screen-tab">
+      <div class="section-title">Share Clicks <button class="refresh-btn" onclick="loadShares()">↻ Refresh</button></div>
+      <input class="search-input" placeholder="Search by ref code..." oninput="filterShares(this.value)">
+      <div id="shareList"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="admin-toast" id="adminToast"></div>
+
+<script>
+const SUPABASE_URL = "https://dtjxcgzpwemdgdeinkcl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0anhjZ3pwd2VtZGdkZWlua2NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDg0ODQsImV4cCI6MjA5MzQ4NDQ4NH0.kGjtOZfK7onzr-3FVMuSljiJ3emllxtGdepxrFVUPPM";
+const ADMIN_PASSWORD = "chatearn@admin2025"; // change this to your own password
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+function doLogin(){
+  const pw = document.getElementById("pwInput").value;
+  if(pw === ADMIN_PASSWORD){
+    sessionStorage.setItem("ce_admin","1");
+    document.getElementById("loginWrap").style.display="none";
+    document.getElementById("appWrap").style.display="block";
+    loadAll();
+  } else {
+    document.getElementById("loginErr").style.display="block";
+  }
+}
+function doLogout(){
+  sessionStorage.removeItem("ce_admin");
+  location.reload();
+}
+if(sessionStorage.getItem("ce_admin")==="1"){
+  document.getElementById("loginWrap").style.display="none";
+  document.getElementById("appWrap").style.display="block";
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg, isErr=false){
+  const t=document.getElementById("adminToast");
+  t.textContent=msg;
+  t.style.background=isErr?"var(--red)":"var(--green)";
+  t.style.color=isErr?"#fff":"#000";
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2800);
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+let currentTab="overview";
+function switchTab(tab){
+  document.querySelectorAll(".screen-tab").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(s=>s.classList.remove("active"));
+  document.getElementById("tab-"+tab).classList.add("active");
+  event.currentTarget.classList.add("active");
+  currentTab=tab;
+  if(tab==="withdrawals")loadWithdrawals();
+  else if(tab==="kyc")loadKYC();
+  else if(tab==="users")loadUsers();
+  else if(tab==="shares")loadShares();
+  else loadAll();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmtDate(d){return d?new Date(d).toLocaleDateString("en-NG",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—";}
+function fmtAmt(n){return"₦"+(n||0).toLocaleString("en-NG");}
+function badge(status){
+  const map={pending:"badge-pending",approved:"badge-approved",paid:"badge-paid",rejected:"badge-rejected"};
+  return`<span class="badge ${map[status]||'badge-pending'}">${status||'pending'}</span>`;
+}
+
+// ── DATA CACHE ─────────────────────────────────────────────────────────────────
+let _withdrawals=[],_kyc=[],_users=[],_shares=[];
+let _wdFilter="pending";
+
+// ── LOAD ALL ──────────────────────────────────────────────────────────────────
+async function loadAll(){
+  document.getElementById("lastRefresh").textContent="Refreshing...";
+  await Promise.all([loadStats(),loadWithdrawals(true),loadKYC(true),loadUsers(true),loadShares(true)]);
+  document.getElementById("lastRefresh").textContent="Updated "+new Date().toLocaleTimeString("en-NG");
+  renderRecentWd();
+}
+
+async function loadStats(){
+  try{
+    const [regRes,wdRes,kycRes,shareRes,paidRes]=await Promise.all([
+      db.from("chatearn_registrations").select("id",{count:"exact",head:true}),
+      db.from("chatearn_withdrawals").select("id",{count:"exact",head:true}).eq("status","pending"),
+      db.from("chatearn_kyc").select("id",{count:"exact",head:true}).eq("status","pending"),
+      db.from("chatearn_share_clicks").select("id",{count:"exact",head:true}).gte("created_at",new Date().toISOString().slice(0,10)),
+      db.from("chatearn_withdrawals").select("amount").eq("status","paid"),
+    ]);
+    document.getElementById("statUsers").textContent=regRes.count??0;
+    document.getElementById("statPendingWd").textContent=wdRes.count??0;
+    document.getElementById("statPendingKyc").textContent=kycRes.count??0;
+    document.getElementById("statShares").textContent=shareRes.count??0;
+    const totalWd=await db.from("chatearn_withdrawals").select("id",{count:"exact",head:true});
+    document.getElementById("statTotalWd").textContent=totalWd.count??0;
+    const paidTotal=(paidRes.data||[]).reduce((s,r)=>s+(r.amount||0),0);
+    document.getElementById("statPaidAmt").textContent=fmtAmt(paidTotal);
+    document.getElementById("statTotalWdAmt").textContent="Total requests";
+  }catch(e){console.log(e);}
+}
+
+// ── WITHDRAWALS ───────────────────────────────────────────────────────────────
+async function loadWithdrawals(silent=false){
+  if(!silent)document.getElementById("wdList").innerHTML=`<div class="loading">Loading...</div>`;
+  const {data}=await db.from("chatearn_withdrawals").select("*").order("created_at",{ascending:false});
+  _withdrawals=data||[];
+  renderWithdrawals();
+}
+
+let _wdSearch="";
+function filterWithdrawals(q){_wdSearch=q.toLowerCase();renderWithdrawals();}
+function setWdFilter(f){_wdFilter=f;renderWithdrawals();}
+
+function renderWithdrawals(){
+  let list=_withdrawals;
+  if(_wdFilter!=="all")list=list.filter(r=>r.status===_wdFilter||((!r.status||r.status==="")&&_wdFilter==="pending"));
+  if(_wdSearch)list=list.filter(r=>(r.account_name||"").toLowerCase().includes(_wdSearch)||(r.account_number||"").includes(_wdSearch)||(r.user_email||"").toLowerCase().includes(_wdSearch));
+  const el=document.getElementById("wdList");
+  if(!list.length){el.innerHTML=`<div class="empty">No ${_wdFilter} withdrawal requests.</div>`;return;}
+  el.innerHTML=list.map(r=>`
+    <div class="entry-card" id="wd-${r.id}">
+      <div class="entry-name">${r.account_name||"Unknown"} ${badge(r.status||"pending")}</div>
+      <div class="entry-meta">
+        Bank: <strong>${(r.bank||"").toUpperCase()}</strong> · Acc: <strong>${r.account_number||"—"}</strong><br>
+        Amount: <strong style="color:var(--green)">${fmtAmt(r.amount)}</strong><br>
+        Email: ${r.user_email||"—"} · ${fmtDate(r.created_at)}
+      </div>
+      <div class="entry-actions">
+        ${(!r.status||r.status==="pending")?`
+          <button class="btn-approve btn-paid" onclick="markWd('${r.id}','paid')">✅ Mark Paid</button>
+          <button class="btn-reject" onclick="markWd('${r.id}','rejected')">✗ Reject</button>
+        `:r.status==="rejected"?`<button class="btn-approve" onclick="markWd('${r.id}','paid')">✅ Mark Paid</button>`:""}
+      </div>
+    </div>`).join("");
+}
+
+async function markWd(id, status){
+  const {error}=await db.from("chatearn_withdrawals").update({status}).eq("id",id);
+  if(error){toast("Update failed",true);return;}
+  _withdrawals=_withdrawals.map(r=>r.id===id?{...r,status}:r);
+  renderWithdrawals();
+  loadStats();
+  toast(status==="paid"?"✅ Marked as Paid!":"✗ Withdrawal Rejected");
+}
+
+// ── KYC ───────────────────────────────────────────────────────────────────────
+async function loadKYC(silent=false){
+  if(!silent)document.getElementById("kycList").innerHTML=`<div class="loading">Loading...</div>`;
+  const {data}=await db.from("chatearn_kyc").select("*").order("created_at",{ascending:false});
+  _kyc=data||[];renderKYC();
+}
+
+let _kycSearch="";
+function filterKYC(q){_kycSearch=q.toLowerCase();renderKYC();}
+
+function renderKYC(){
+  let list=_kyc;
+  if(_kycSearch)list=list.filter(r=>(r.full_name||"").toLowerCase().includes(_kycSearch)||(r.user_email||"").toLowerCase().includes(_kycSearch));
+  const el=document.getElementById("kycList");
+  if(!list.length){el.innerHTML=`<div class="empty">No KYC submissions yet.</div>`;return;}
+  el.innerHTML=list.map(r=>`
+    <div class="entry-card" id="kyc-${r.id}">
+      <div class="entry-name">${r.full_name||"Unknown"} ${badge(r.status||"pending")}</div>
+      <div class="entry-meta">Email: ${r.user_email||"—"} · Submitted: ${fmtDate(r.created_at)}</div>
+      <div class="entry-actions">
+        ${r.status==="pending"||!r.status?`
+          <button class="btn-approve" onclick="markKYC('${r.id}','approved')">✅ Approve</button>
+          <button class="btn-reject" onclick="markKYC('${r.id}','rejected')">✗ Reject</button>
+        `:""}
+        ${r.status==="rejected"?`<button class="btn-approve" onclick="markKYC('${r.id}','approved')">✅ Approve</button>`:""}
+      </div>
+    </div>`).join("");
+}
+
+async function markKYC(id, status){
+  const {error}=await db.from("chatearn_kyc").update({status}).eq("id",id);
+  if(error){toast("Update failed",true);return;}
+  _kyc=_kyc.map(r=>r.id===id?{...r,status}:r);
+  renderKYC();loadStats();
+  toast(status==="approved"?"✅ KYC Approved!":"✗ KYC Rejected");
+}
+
+// ── USERS ─────────────────────────────────────────────────────────────────────
+async function loadUsers(silent=false){
+  if(!silent)document.getElementById("userList").innerHTML=`<div class="loading">Loading...</div>`;
+  const {data}=await db.from("chatearn_registrations").select("*").order("created_at",{ascending:false});
+  _users=data||[];renderUsers();
+}
+
+let _userSearch="";
+function filterUsers(q){_userSearch=q.toLowerCase();renderUsers();}
+
+function renderUsers(){
+  let list=_users;
+  if(_userSearch)list=list.filter(r=>(r.full_name||"").toLowerCase().includes(_userSearch)||(r.email||"").toLowerCase().includes(_userSearch));
+  const el=document.getElementById("userList");
+  if(!list.length){el.innerHTML=`<div class="empty">No users registered yet.</div>`;return;}
+  el.innerHTML=list.map((r,i)=>`
+    <div class="entry-card">
+      <div class="entry-name">${r.full_name||"Unknown"} ${r.banned?badge("rejected"):""}</div>
+      <div class="entry-meta">Email: ${r.user_email||r.email||"—"} · Joined: ${fmtDate(r.created_at)} · #${(_users.length-i)}</div>
+      <div class="entry-actions">
+        ${!r.banned?`<button class="btn-ban" onclick="banUser('${r.id}',true)">🚫 Ban</button>`
+        :`<button class="btn-approve" onclick="banUser('${r.id}',false)">✅ Unban</button>`}
+      </div>
+    </div>`).join("");
+}
+
+async function banUser(id, ban){
+  const {error}=await db.from("chatearn_registrations").update({banned:ban}).eq("id",id);
+  if(error){toast("Update failed",true);return;}
+  _users=_users.map(r=>r.id===id?{...r,banned:ban}:r);
+  renderUsers();
+  toast(ban?"🚫 User banned":"✅ User unbanned");
+}
+
+// ── SHARES ────────────────────────────────────────────────────────────────────
+async function loadShares(silent=false){
+  if(!silent)document.getElementById("shareList").innerHTML=`<div class="loading">Loading...</div>`;
+  const {data}=await db.from("chatearn_share_clicks").select("*").order("created_at",{ascending:false}).limit(200);
+  _shares=data||[];renderShares();
+}
+
+let _shareSearch="";
+function filterShares(q){_shareSearch=q.toLowerCase();renderShares();}
+
+function renderShares(){
+  let list=_shares;
+  if(_shareSearch)list=list.filter(r=>(r.ref_code||"").toLowerCase().includes(_shareSearch));
+  // group by ref_code
+  const grouped={};
+  list.forEach(r=>{
+    const k=r.ref_code||"unknown";
+    if(!grouped[k])grouped[k]={ref:k,total:0,credited:0,last:r.created_at};
+    grouped[k].total++;
+    if(r.credited)grouped[k].credited++;
+    if(r.created_at>grouped[k].last)grouped[k].last=r.created_at;
+  });
+  const groups=Object.values(grouped).sort((a,b)=>b.total-a.total);
+  const el=document.getElementById("shareList");
+  if(!groups.length){el.innerHTML=`<div class="empty">No share clicks recorded yet.</div>`;return;}
+  el.innerHTML=groups.map(g=>`
+    <div class="entry-card">
+      <div class="entry-name">Ref: ${g.ref}</div>
+      <div class="entry-meta">
+        Total clicks: <strong style="color:var(--green)">${g.total}</strong> · 
+        Credited: <strong>${g.credited}</strong> · 
+        Uncredited: <strong>${g.total-g.credited}</strong><br>
+        Last click: ${fmtDate(g.last)}
+      </div>
+    </div>`).join("");
+}
+
+// ── RECENT WD (overview) ──────────────────────────────────────────────────────
+function renderRecentWd(){
+  const recent=_withdrawals.slice(0,5);
+  const el=document.getElementById("recentWd");
+  if(!recent.length){el.innerHTML=`<div class="empty">No withdrawals yet.</div>`;return;}
+  el.innerHTML=recent.map(r=>`
+    <div class="entry-card">
+      <div class="entry-name">${r.account_name||"Unknown"} ${badge(r.status||"pending")}</div>
+      <div class="entry-meta">Bank: ${(r.bank||"").toUpperCase()} · ${fmtAmt(r.amount)} · ${fmtDate(r.created_at)}</div>
+      ${(!r.status||r.status==="pending")?`
+        <div class="entry-actions">
+          <button class="btn-approve btn-paid" onclick="markWd('${r.id}','paid')">✅ Mark Paid</button>
+          <button class="btn-reject" onclick="markWd('${r.id}','rejected')">✗ Reject</button>
+        </div>`:""}`).join("");
+}
+
+// Init on page load
+window.addEventListener("DOMContentLoaded",()=>{
+  if(sessionStorage.getItem("ce_admin")==="1")loadAll();
+});
+</script>
+</body>
+</html>
