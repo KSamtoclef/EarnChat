@@ -416,8 +416,8 @@ body{font-family:"Inter",sans-serif;background:var(--bg);color:var(--w);min-heig
       <div class="land-av-count">+2K</div>
     </div>
 
-    <div class="land-title">Chat With <em>AI Companions</em><br>& Earn in Naira</div>
-    <p class="land-sub">Chat with fun AI companions from around the world and earn <strong>real Naira</strong> for every conversation. Join now — it's free.</p>
+    <div class="land-title">Chat With <em>Foreigners</em><br>& Earn in Naira</div>
+    <p class="land-sub">Chat with fun Foreigners from around the world and earn <strong>real Naira</strong> for every conversation. Join now — it's free.</p>
 
     <div class="earn-rates">
       <div class="er-title">EARNINGS PER REPLY</div>
@@ -530,12 +530,12 @@ body{font-family:"Inter",sans-serif;background:var(--bg);color:var(--w);min-heig
 <div id="loading" class="screen">
   <div class="ld-icon">🎉</div>
   <div class="ld-title" id="ldTitle">Setting Up Your Account</div>
-  <p class="ld-sub" id="ldSub">Please wait while we set up your AI companions...</p>
+  <p class="ld-sub" id="ldSub">Please wait while we set up your Foreigners...</p>
   <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
   <div class="ld-steps" id="ldSteps">
     <div class="ld-step" id="ls1"><div class="ld-step-dot"></div>Creating your profile...</div>
     <div class="ld-step" id="ls2"><div class="ld-step-dot"></div>Adding ₦10,000 sign-up bonus...</div>
-    <div class="ld-step" id="ls3"><div class="ld-step-dot"></div>Setting up your AI companions...</div>
+    <div class="ld-step" id="ls3"><div class="ld-step-dot"></div>Setting up your Foreigners...</div>
     <div class="ld-step" id="ls4"><div class="ld-step-dot"></div>Setting up your wallet...</div>
   </div>
 </div>
@@ -967,7 +967,7 @@ function showExitIntent(){
   if(exitIntentShown)return;
   exitIntentShown=true;
   document.getElementById("bwTitle").textContent="Wait — Before You Go!";
-  document.getElementById("bwBody").innerHTML="Nigerians are earning real money chatting with AI companions on ChatEarn. Give it a try before you leave!";
+  document.getElementById("bwBody").innerHTML="Nigerians are earning real money chatting with Foreigners on ChatEarn. Give it a try before you leave!";
   document.getElementById("bwStayBtn").textContent="✅ Okay, Let Me Try It";
   document.getElementById("bwStayBtn").onclick=closeBackWarn;
   document.getElementById("bwLeaveBtn").textContent="No thanks, leave";
@@ -1795,7 +1795,7 @@ function placeWithdrawal(){
 
 function getMsg(){
   const amt=withdrawalAmount||totalBalance;
-  return `💰 I just earned ₦${amt.toLocaleString("en-NG")} on ChatEarn chatting with fun AI companions!\n\nThis app pays Nigerians to Chat With Foreigners styled after USA 🇺🇸, UK 🇬🇧, Canada 🇨🇦 and more.\n\n✅ Free to join\n✅ Earn ₦8,000–₦15,000 per reply\n✅ Withdraw to OPay/PalmPay\n\nSign up here 👇\n${SITE}`;
+  return `💰 I just earned ₦${amt.toLocaleString("en-NG")} on ChatEarn chatting with fun Foreigners!\n\nThis app pays Nigerians to Chat With Foreigners styled after USA 🇺🇸, UK 🇬🇧, Canada 🇨🇦 and more.\n\n✅ Free to join\n✅ Earn ₦8,000–₦15,000 per reply\n✅ Withdraw to OPay/PalmPay\n\nSign up here 👇\n${SITE}`;
 }
 
 let swBusy=false;
@@ -1872,7 +1872,7 @@ function getShareLink(){
 }
 
 function shareToEarn(){
-  const text="💰 Join ChatEarn and earn real Naira chatting with AI companions!\n"+getShareLink();
+  const text="💰 Join ChatEarn and earn real Naira chatting with Foreigners!\n"+getShareLink();
   window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(text),"_blank");
 }
 
