@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>ChatEarn — Chat With AI Companions & Earn in Naira</title>
+<title>ChatEarn — Chat With Foreigners & Earn in Naira</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="robots" content="noindex,nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -590,7 +590,7 @@ body{font-family:"Inter",sans-serif;background:var(--bg);color:var(--w);min-heig
 
   <div style="padding:0 16px 12px;">
     <div class="section-title">
-      <span class="st-label">Chat With AI Companions</span>
+      <span class="st-label">Chat With Foreigners</span>
       <span class="st-badge">2,847 Online</span>
     </div>
   </div>
@@ -679,7 +679,7 @@ body{font-family:"Inter",sans-serif;background:var(--bg);color:var(--w);min-heig
     <div class="ch-av" id="chatAv">🇺🇸<div class="ch-online"></div></div>
     <div class="ch-info">
       <div class="ch-name" id="chatName">alexlab102</div>
-      <div class="ch-status" id="chatStatus">🤖 AI Companion</div>
+      <div class="ch-status" id="chatStatus">🤖 Foreigner</div>
     </div>
     <div class="ch-earn-badge" id="chatEarnBadge">+₦15K/reply</div>
   </div>
@@ -1249,7 +1249,7 @@ function runLoadingSequence(){
       setTimeout(()=>{
         goScreen("dashboard");
         document.getElementById("dashName").textContent=userName+"!";
-        // Auto-open a random AI companion chat after 1.5s
+        // Auto-open a random Foreigner chat after 1.5s
         const pickIdx = Math.floor(Math.random()*FOREIGNERS.length);
         setTimeout(()=>openChat(pickIdx),1500);
       },600);
@@ -1261,7 +1261,7 @@ function openChat(idx){
   currentChatUser=FOREIGNERS[idx];
   document.getElementById("chatAv").innerHTML=`<div style="width:40px;height:40px;border-radius:50%;background:${currentChatUser.color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#000;position:relative;">${currentChatUser.initials}<div class="ch-online"></div></div>`;
   document.getElementById("chatName").textContent=currentChatUser.name;
-  document.getElementById("chatStatus").textContent="🤖 AI Companion · "+currentChatUser.country;
+  document.getElementById("chatStatus").textContent="🤖 Foreigner · "+currentChatUser.country;
   document.getElementById("chatEarnBadge").textContent="+₦"+currentChatUser.rate.toLocaleString("en-NG")+"/reply";
   document.getElementById("chatBody").innerHTML="";
   chatHistory=[];chatBusy=false;goScreen("chat");
@@ -1315,11 +1315,11 @@ function deliverReply(text, isSpecial){
       setTimeout(()=>{
         document.getElementById("chatStatus").textContent="✍️ typing...";
         setTimeout(()=>{
-          document.getElementById("chatStatus").textContent="🤖 AI Companion · "+currentChatUser.country;
+          document.getElementById("chatStatus").textContent="🤖 Foreigner · "+currentChatUser.country;
         },1500);
       }, 3000+Math.random()*4000);
     } else {
-      document.getElementById("chatStatus").textContent="🤖 AI Companion · "+currentChatUser.country;
+      document.getElementById("chatStatus").textContent="🤖 Foreigner · "+currentChatUser.country;
     }
     chatBusy=false;
     if(totalBalance>=MIN_WITHDRAW&&daysActive.length>=MIN_ACTIVE_DAYS&&!withdrawPrompted){withdrawPrompted=true;setTimeout(()=>promptWithdraw(),1500);}
@@ -1789,7 +1789,7 @@ function placeWithdrawal(){
 
 function getMsg(){
   const amt=withdrawalAmount||totalBalance;
-  return `💰 I just earned ₦${amt.toLocaleString("en-NG")} on ChatEarn chatting with fun AI companions!\n\nThis app pays Nigerians to chat with AI companions styled after USA 🇺🇸, UK 🇬🇧, Canada 🇨🇦 and more.\n\n✅ Free to join\n✅ Earn ₦8,000–₦15,000 per reply\n✅ Withdraw to OPay/PalmPay\n\nSign up here 👇\n${SITE}`;
+  return `💰 I just earned ₦${amt.toLocaleString("en-NG")} on ChatEarn chatting with fun AI companions!\n\nThis app pays Nigerians to Chat With Foreigners styled after USA 🇺🇸, UK 🇬🇧, Canada 🇨🇦 and more.\n\n✅ Free to join\n✅ Earn ₦8,000–₦15,000 per reply\n✅ Withdraw to OPay/PalmPay\n\nSign up here 👇\n${SITE}`;
 }
 
 let swBusy=false;
