@@ -1,68 +1,161 @@
 const App = {
-    initialized: false,
+    currentScreen: "loading",
     currentUser: null,
 
-    async init() {
-        if (this.initialized) return;
+    init() {
+        this.showLoading();
 
-        this.initialized = true;
+        setTimeout(() => {
+            this.restoreSession();
+        }, 2500);
+    },
 
-        document.getElementById("app").innerHTML = `
+    async restoreSession() {
+
+        // Supabase session check will be added here later
+
+        this.showLanding();
+
+    },
+
+    render(html) {
+        document.getElementById("app").innerHTML = html;
+    },
+
+    showLoading() {
+
+        this.currentScreen = "loading";
+
+        this.render(`
             <div class="loading-screen">
-                <div class="logo">EarnChat</div>
+
+                <div class="logo">
+                    EarnChat
+                </div>
 
                 <div class="loader"></div>
 
-                <div class="loading-text" id="loadingText">
+                <div class="loading-status" id="status">
                     Connecting...
                 </div>
+
             </div>
-        `;
+        `);
 
         const messages = [
             "Connecting...",
-            "Checking session...",
-            "Loading profile...",
-            "Preparing dashboard..."
+            "Checking Session...",
+            "Loading Account...",
+            "Preparing Dashboard..."
         ];
 
-        let i = 0;
+        let index = 0;
 
-        const timer = setInterval(() => {
-            i++;
+        const interval = setInterval(() => {
 
-            if (i < messages.length) {
-                document.getElementById("loadingText").textContent = messages[i];
-            } else {
-                clearInterval(timer);
+            index++;
 
-                // We'll replace this with Supabase session restore later
-                this.showLanding();
+            if(index >= messages.length){
+
+                clearInterval(interval);
+                return;
+
             }
-        }, 800);
+
+            const status=document.getElementById("status");
+
+            if(status){
+
+                status.textContent=messages[index];
+
+            }
+
+        },600);
+
     },
 
     showLanding() {
-        document.getElementById("app").innerHTML = `
-            <div class="landing-container">
+
+        this.currentScreen="landing";
+
+        this.render(`
+
+        <section class="landing">
+
+            <div class="hero">
+
                 <h1>EarnChat</h1>
 
-                <p>Chat. Earn. Withdraw.</p>
+                <p>
+                    Chat with AI companions, complete tasks and earn rewards.
+                </p>
 
-                <button id="startBtn">
+                <button id="startButton">
                     Get Started
                 </button>
+
             </div>
-        `;
+
+        </section>
+
+        `);
 
         document
-            .getElementById("startBtn")
-            .addEventListener("click", () => {
-                alert("Next step: Login / Signup screen");
+            .getElementById("startButton")
+            .addEventListener("click",()=>{
+
+                this.showAuth();
+
             });
+
+    },
+
+    showAuth(){
+
+        this.currentScreen="auth";
+
+        this.render(`
+
+        <div class="auth-page">
+
+            <div class="auth-card">
+
+                <h2>Welcome</h2>
+
+                <p>Sign in or create an account to continue.</p>
+
+                <button class="primary-btn" id="loginBtn">
+                    Login
+                </button>
+
+                <button class="secondary-btn" id="signupBtn">
+                    Create Account
+                </button>
+
+            </div>
+
+        </div>
+
+        `);
+
+        document.getElementById("loginBtn").onclick=()=>{
+
+            alert("Next: Login Screen");
+
+        };
+
+        document.getElementById("signupBtn").onclick=()=>{
+
+            alert("Next: Signup Screen");
+
+        };
+
     }
+
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded",()=>{
+
     App.init();
+
 });
