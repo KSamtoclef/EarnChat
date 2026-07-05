@@ -138,17 +138,7 @@ const App = {
 
         `);
 
-        document.getElementById("loginBtn").onclick=()=>{
-
-            alert("Next: Login Screen");
-
-        };
-
-        document.getElementById("signupBtn").onclick=()=>{
-
-            alert("Next: Signup Screen");
-
-        };
+       Auth.init();
 
     }
 
