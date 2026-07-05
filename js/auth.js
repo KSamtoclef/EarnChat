@@ -127,15 +127,21 @@ const Auth = {
 
     },
 
-    bindLogin(){
+    bindSignup(){
 
-        document.getElementById("backLanding").onclick=()=>{
+    document.getElementById("backLanding").onclick=()=>{
 
-            App.showLanding();
+        App.showLanding();
 
-        };
+    };
 
-    },
+    document.getElementById("signupSubmit").onclick=()=>{
+
+        Dashboard.show();
+
+    };
+
+},
 
     bindSignup(){
 
