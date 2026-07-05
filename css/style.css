@@ -112,3 +112,85 @@ transform:rotate(360deg);
 }
 
 }
+
+/* ---------- AUTH PAGE ---------- */
+
+.landing,
+.auth-page{
+    width:100%;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:24px;
+    background:linear-gradient(180deg,#08101f,#101b35);
+}
+
+.hero,
+.auth-card{
+    width:100%;
+    max-width:420px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    padding:40px 28px;
+    text-align:center;
+    backdrop-filter:blur(12px);
+}
+
+.hero h1,
+.auth-card h2{
+    font-size:38px;
+    margin-bottom:16px;
+}
+
+.hero p,
+.auth-card p{
+    color:#94a3b8;
+    line-height:1.7;
+    margin-bottom:30px;
+}
+
+.primary-btn,
+.secondary-btn,
+#startButton{
+
+    width:100%;
+    height:52px;
+    border-radius:14px;
+    font-size:16px;
+    font-weight:600;
+    margin-top:14px;
+    transition:.25s;
+
+}
+
+.primary-btn,
+#startButton{
+
+    background:#22c55e;
+    color:#fff;
+
+}
+
+.primary-btn:hover,
+#startButton:hover{
+
+    background:#16a34a;
+    transform:translateY(-2px);
+
+}
+
+.secondary-btn{
+
+    background:transparent;
+    color:#fff;
+    border:1px solid rgba(255,255,255,.15);
+
+}
+
+.secondary-btn:hover{
+
+    background:rgba(255,255,255,.06);
+
+}
