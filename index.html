@@ -1444,7 +1444,9 @@ updateBalance();
 
 // Automatically open the first chat after login
 setTimeout(()=>{
-  openChat(0);
+ console.log("About to open chat...");
+openChat(0);
+console.log("Chat opened.");
 },600);
 
 setTimeout(()=>showGuide("welcome"),1200);
