@@ -2279,7 +2279,7 @@ function showEarnToast(msg){const t=document.getElementById("earnToast");t.textC
 function renderStories(){
   const el=document.getElementById("storiesRow");
   if(!el)return;
-  el.innerHTML=CHAT_USERS.map((u,i)=>{
+  el.innerHTML=FOREIGNERS.map((u,i)=>{
     const done=chatHistory.some(h=>h.idx===i);
     return`<div class="story-item" onclick="openChat(${i})">
       <div class="story-ring ${done?"done":""}">
@@ -2294,7 +2294,7 @@ function renderStories(){
 function renderForeignerList(){
   const el=document.getElementById("foreignerList");
   if(!el)return;
-  el.innerHTML=CHAT_USERS.map((u,i)=>`
+  el.innerHTML=FOREIGNERS.map((u,i)=>`
     <div class="foreigner-card" onclick="openChat(${i})">
       <div class="fc-av" style="background:${u.bg};border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;">
         ${u.av}<div class="fc-online"></div>
