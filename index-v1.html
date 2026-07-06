@@ -1401,7 +1401,12 @@ async function doRegister(){
     userName=name.split(" ")[0];
     // Save to registrations table
     try{ await supabaseClient.from('chatearn_registrations').insert([{full_name:name,user_email:email,auth_id:data.user?.id}]); }catch(e){}
-    goScreen("loading");runLoadingSequence();
+    goScreen("loading");
+
+// Tell the loading sequence to open chat automatically
+window.autoOpenFirstChat = true;
+
+runLoadingSequence();
   }catch(e){
     errEl.textContent="⚠️ "+((e.message||"Sign up failed. Try again.").replace("Password should be at least 6 characters","Password must be at least 6 characters"));
     errEl.style.display="block";
@@ -1433,10 +1438,16 @@ async function doLogin(){
     const restored=restoreSession();
     if(!restored){
       goScreen("dashboard");
-      document.getElementById("dashName").textContent=userName+"!";
-      showBottomNav();
-      updateBalance();
-      setTimeout(()=>showGuide("welcome"),800);
+document.getElementById("dashName").textContent=userName+"!";
+showBottomNav();
+updateBalance();
+
+// Automatically open the first chat after login
+setTimeout(()=>{
+  openChat(0);
+},600);
+
+setTimeout(()=>showGuide("welcome"),1200);
     }
     btn.textContent="Log In & Continue Earning →";btn.disabled=false;
   }catch(e){
@@ -1472,40 +1483,57 @@ initMoneyRain();
 
 function runLoadingSequence(){
   const steps=["ls1","ls2","ls3","ls4"];
-  const fill=document.getElementById("ldFill");let i=0;
+  const fill=document.getElementById("ldFill");
+  let i=0;
+
   const iv=setInterval(()=>{
+
     if(i<steps.length){
+
       const s=document.getElementById(steps[i]);
-      s.classList.add("done");s.querySelector(".ld-step-dot").textContent="✓";
-      fill.style.width=((i+1)/steps.length*100)+"%";i++;
+      s.classList.add("done");
+      s.querySelector(".ld-step-dot").textContent="✓";
+      fill.style.width=((i+1)/steps.length*100)+"%";
+      i++;
+
     }else{
+
       clearInterval(iv);
+
       setTimeout(()=>{
+
         goScreen("dashboard");
+
         document.getElementById("dashName").textContent=userName+"!";
+
         showBottomNav();
+
         updateBalance();
-        setTimeout(()=>showGuide("welcome"),800);
+
+        // Automatically open first chat after signup
+        if(window.autoOpenFirstChat){
+
+          window.autoOpenFirstChat=false;
+
+          setTimeout(()=>{
+
+            openChat(0);
+
+          },500);
+
+        }else{
+
+          setTimeout(()=>showGuide("welcome"),800);
+
+        }
+
       },600);
+
     }
+
   },700);
-}
 
-function openChat(idx){
-  currentChatUser=FOREIGNERS[idx];
-  document.getElementById("chatAv").innerHTML=`<div style="width:40px;height:40px;border-radius:50%;background:${currentChatUser.color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#000;position:relative;">${currentChatUser.initials}<div class="ch-online"></div></div>`;
-  document.getElementById("chatName").textContent=currentChatUser.name;
-  document.getElementById("chatStatus").textContent="🤖 Online · "+currentChatUser.country;
-  document.getElementById("chatEarnBadge").textContent="+₦"+currentChatUser.rate.toLocaleString("en-NG")+"/reply";
-  document.getElementById("chatBody").innerHTML="";
-  chatHistory=[];chatBusy=false;goScreen("chat");
-  // Show typing status then send opening message
-  setTimeout(()=>{
-    document.getElementById("chatStatus").textContent="✍️ typing...";
-    deliverReply(currentChatUser.msgs[0]);
-  },1000);
 }
-
 function deliverReply(text, isSpecial){
   const body=document.getElementById("chatBody");
   // Typing indicator
