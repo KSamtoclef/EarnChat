@@ -1911,17 +1911,43 @@ function renderStepGuide(){
   const sharePending=localStorage.getItem("share_pending_"+todayStr())==="1";
   const shareCompletedToday=localStorage.getItem("share_completed_"+todayStr())==="1";
 
-  // Step 1 — Chat
-  const step1Done=dailyEarnedToday>=capToday;
-  const step1Bg=step1Done?"rgba(0,200,83,.08)":"var(--card2)";
-  const step1Border=step1Done?"rgba(0,200,83,.25)":"var(--border)";
-  let html=`<div style="background:${step1Bg};border:1px solid ${step1Border};border-radius:12px;padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;">
-    <div style="font-size:20px;flex-shrink:0;">${step1Done?"✅":"💬"}</div>
-    <div>
-      <div style="font-size:13px;font-weight:800;color:${step1Done?"var(--green)":"var(--text)"};margin-bottom:2px;">Step 1 — Chat & Earn</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.5;">${leftToday>0?`You have ${fmt(leftToday)} left to earn today.`:"Today's chat limit reached. Come back tomorrow!"}</div>
+ // Step 1 — Chat
+const step1Done = dailyEarnedToday >= capToday;
+const step1Bg = step1Done ? "rgba(0,200,83,.08)" : "var(--card2)";
+const step1Border = step1Done ? "rgba(0,200,83,.25)" : "var(--border)";
+
+let html = `<div
+    onclick="openChat(0)"
+    style="background:${step1Bg};
+    border:1px solid ${step1Border};
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:8px;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    cursor:pointer;
+    transition:.25s;">
+    
+    <div style="font-size:20px;flex-shrink:0;">
+        ${step1Done ? "✅" : "💬"}
     </div>
-  </div>`;
+
+    <div style="flex:1;">
+        <div style="font-size:13px;font-weight:800;color:${step1Done ? "var(--green)" : "var(--text)"};margin-bottom:2px;">
+            Step 1 — Chat & Earn
+        </div>
+
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;">
+            ${
+                leftToday > 0
+                ? `You have ${fmt(leftToday)} left to earn today.`
+                : "Today's chat limit reached. Come back tomorrow!"
+            }
+        </div>
+    </div>
+
+</div>`;
 
   // Step 2 — Share (interactive)
   if(sharesDone||shareCompletedToday){
