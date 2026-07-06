@@ -138,8 +138,6 @@ const App = {
 
         `);
 
-       Auth.init();
-
     }
 
 };
