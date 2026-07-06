@@ -136,8 +136,9 @@ const App = {
 
         </div>
 
-        `);
-         Auth.init();
+     `);
+
+        Auth.init();
 
     }
 
