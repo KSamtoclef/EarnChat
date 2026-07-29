@@ -3475,8 +3475,10 @@ function doOfferTask(){
   },1000);
 }
 
-var chatConvo=[],chatPending=false,curP=null;
+var chatConvo=[],chatPending=false,curP=null,chatStartToken=0,chatOpenerTimer=null,lastAddedMessage={side:'',text:'',at:0};
 function startChat(idx, presetOpener){
+  var thisStartToken=++chatStartToken;
+  if(chatOpenerTimer){clearTimeout(chatOpenerTimer);chatOpenerTimer=null;}
   var now=Math.floor(Date.now()/1000);
   var cooldown=S.hasWithdrawn?CONFIG.chat_cooldown_vip:CONFIG.chat_cooldown;
   var elapsed=now-S.lastChatTime;
@@ -3501,21 +3503,27 @@ function startChat(idx, presetOpener){
   // Short realistic delay — they're already "typing"
   var delay = presetOpener ? 1200 : (2000 + Math.random()*2000);
   showTyper();
-  setTimeout(function(){
+  chatOpenerTimer=setTimeout(function(){
+    if(thisStartToken!==chatStartToken)return;
     rmTyper();
     addMsg('them', opener);
     document.getElementById('c-stat').textContent='Online now';
+    chatOpenerTimer=null;
   }, delay);
 }
 function addMsg(side,text){
+  text=String(text||'');
+  var now=Date.now();
+  if(lastAddedMessage.side===side&&lastAddedMessage.text===text&&now-lastAddedMessage.at<2500)return;
+  lastAddedMessage={side:side,text:text,at:now};
   var msgs=document.getElementById('chat-msgs');
   var div=document.createElement('div');div.className='msg '+side;
-  var bubble=document.createElement('div');bubble.className='mbub';bubble.textContent=String(text||'');
+  var bubble=document.createElement('div');bubble.className='mbub';bubble.textContent=text;
   var meta=document.createElement('div');meta.className='mmeta';
   meta.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   div.appendChild(bubble);div.appendChild(meta);
   msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
-  chatConvo.push({role:side==='them'?'assistant':'user',content:String(text||'')});
+  chatConvo.push({role:side==='them'?'assistant':'user',content:text});
 }
 function showTyper(){var m=document.getElementById('chat-msgs'),d=document.createElement('div');d.className='msg them';d.id='typer';d.innerHTML='<div class="typewrap"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';m.appendChild(d);m.scrollTop=m.scrollHeight;}
 function rmTyper(){var t=document.getElementById('typer');if(t)t.remove();}
@@ -4732,5 +4740,60 @@ function stopAdminRealtime() {
   _admRealtimeChannel = null;
 }
 </script>
+
+<div id="return-sponsored-modal" role="dialog" aria-modal="true" aria-hidden="true" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:18px;">
+  <div style="width:min(100%,360px);background:#121A16;border:1px solid #1F2E28;border-radius:18px;padding:20px;text-align:center;">
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A9E90;margin-bottom:8px;">Sponsored · Optional</div>
+    <h3 style="font-size:18px;margin-bottom:7px;">Explore a member offer</h3>
+    <p style="font-size:13px;line-height:1.55;color:#7A9E90;margin-bottom:14px;">This offer is separate from your saved chat progress.</p>
+    <button id="return-sponsored-open" type="button" style="display:block;width:100%;background:#00C896;color:#000;border:0;border-radius:12px;padding:13px;font-weight:800;margin-bottom:9px;">View sponsored offer</button>
+    <button id="return-sponsored-skip" type="button" style="display:block;width:100%;background:#1A2520;color:#E8F5F0;border:1px solid #1F2E28;border-radius:12px;padding:12px;font-weight:700;">Continue without offer</button>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  var RETURN_KEY='earn_chat_external_return_offer_v1';
+  var modal=document.getElementById('return-sponsored-modal');
+  if(!modal)return;
+  function hide(){modal.style.display='none';modal.setAttribute('aria-hidden','true');}
+  function show(){
+    if(sessionStorage.getItem(RETURN_KEY)!=='1')return;
+    sessionStorage.removeItem(RETURN_KEY);
+    setTimeout(function(){modal.style.display='flex';modal.setAttribute('aria-hidden','false');},450);
+  }
+  var originalOpenLink=window.openLink;
+  if(typeof originalOpenLink==='function'){
+    window.openLink=function(key){
+      if(key!=='kyc')sessionStorage.setItem(RETURN_KEY,'1');
+      return originalOpenLink.apply(this,arguments);
+    };
+  }
+  document.getElementById('return-sponsored-open').addEventListener('click',function(){hide();if(typeof window.openLink==='function')window.openLink('dash1');});
+  document.getElementById('return-sponsored-skip').addEventListener('click',hide);
+  window.addEventListener('focus',show);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)show();});
+})();
+</script>
+
+
+<script>
+(function(){
+  function removeDuplicateKycOffer(){
+    document.querySelectorAll('div,a,section').forEach(function(el){
+      var text=(el.innerText||'').replace(/\s+/g,' ').trim();
+      if(text.indexOf('Featured member activity')>-1 && text.indexOf('OPEN OPTIONAL ACTIVITY')>-1){
+        var parent=el;
+        while(parent.parentElement && parent.parentElement.innerText && parent.parentElement.innerText.trim()===text)parent=parent.parentElement;
+        parent.remove();
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded',removeDuplicateKycOffer);
+  setTimeout(removeDuplicateKycOffer,300);
+})();
+</script>
+
 </body>
 </html>
