@@ -1,0 +1,54 @@
+name: Apply share popup fix directly
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-share-popup-fix-v2.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          pattern=re.compile(r"<script>\s*\(function\(\)\{\s*var RETURN_KEY='earn_chat_external_return_offer_v1';.*?\}\)\(\);\s*</script>",re.S)
+          replacement='''<script>
+(function(){
+  var RETURN_KEY='earn_chat_external_return_offer_v1';
+  var SHOWN_KEY='earn_chat_external_return_offer_shown_v1';
+  var modal=document.getElementById('return-sponsored-modal');
+  if(!modal)return;
+  function markShown(){try{sessionStorage.setItem(SHOWN_KEY,'1');sessionStorage.removeItem(RETURN_KEY);}catch(e){}}
+  function hide(){markShown();modal.style.display='none';modal.setAttribute('aria-hidden','true');}
+  function show(){try{if(sessionStorage.getItem(SHOWN_KEY)==='1')return;if(sessionStorage.getItem(RETURN_KEY)!=='1')return;markShown();}catch(e){return;}setTimeout(function(){modal.style.display='flex';modal.setAttribute('aria-hidden','false');},450);}
+  var originalOpenLink=window.openLink;
+  if(typeof originalOpenLink==='function'){
+    window.openLink=function(key){
+      try{var k=String(key||'');var shareRelated=k.indexOf('share')===0||k==='wa'||k==='whatsapp';if(k!=='kyc'&&!shareRelated&&sessionStorage.getItem(SHOWN_KEY)!=='1')sessionStorage.setItem(RETURN_KEY,'1');}catch(e){}
+      return originalOpenLink.apply(this,arguments);
+    };
+  }
+  document.getElementById('return-sponsored-open').addEventListener('click',function(){hide();if(typeof originalOpenLink==='function')originalOpenLink('dash1');});
+  document.getElementById('return-sponsored-skip').addEventListener('click',hide);
+  window.addEventListener('focus',show);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)show();});
+})();
+</script>'''
+          updated,count=pattern.subn(replacement,s,count=1)
+          if count!=1: raise SystemExit(f'Expected one return-popup script, found {count}')
+          p.write_text(updated,encoding='utf-8')
+          PY
+      - name: Commit result and remove workflow
+        run: |
+          rm -f .github/workflows/apply-share-popup-fix-v2.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html .github/workflows/apply-share-popup-fix-v2.yml
+          git commit -m "Show return popup only once per session" || exit 0
+          git push
