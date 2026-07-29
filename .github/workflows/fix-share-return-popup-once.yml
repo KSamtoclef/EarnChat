@@ -1,0 +1,93 @@
+name: Fix share return popup once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-share-return-popup-once.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch return popup behavior
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = """(function(){
+  var RETURN_KEY='earn_chat_external_return_offer_v1';
+  var modal=document.getElementById('return-sponsored-modal');
+  if(!modal)return;
+  function hide(){modal.style.display='none';modal.setAttribute('aria-hidden','true');}
+  function show(){
+    if(sessionStorage.getItem(RETURN_KEY)!=='1')return;
+    sessionStorage.removeItem(RETURN_KEY);
+    setTimeout(function(){modal.style.display='flex';modal.setAttribute('aria-hidden','false');},450);
+  }
+  var originalOpenLink=window.openLink;
+  if(typeof originalOpenLink==='function'){
+    window.openLink=function(key){
+      if(key!=='kyc')sessionStorage.setItem(RETURN_KEY,'1');
+      return originalOpenLink.apply(this,arguments);
+    };
+  }
+  document.getElementById('return-sponsored-open').addEventListener('click',function(){hide();if(typeof window.openLink==='function')window.openLink('dash1');});
+  document.getElementById('return-sponsored-skip').addEventListener('click',hide);
+  window.addEventListener('focus',show);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)show();});
+})();"""
+
+          new = """(function(){
+  var RETURN_KEY='earn_chat_external_return_offer_v1';
+  var SHOWN_KEY='earn_chat_external_return_offer_shown_v1';
+  var modal=document.getElementById('return-sponsored-modal');
+  if(!modal)return;
+  function markShown(){
+    try{sessionStorage.setItem(SHOWN_KEY,'1');sessionStorage.removeItem(RETURN_KEY);}catch(e){}
+  }
+  function hide(){markShown();modal.style.display='none';modal.setAttribute('aria-hidden','true');}
+  function show(){
+    try{
+      if(sessionStorage.getItem(SHOWN_KEY)==='1')return;
+      if(sessionStorage.getItem(RETURN_KEY)!=='1')return;
+      markShown();
+    }catch(e){return;}
+    setTimeout(function(){modal.style.display='flex';modal.setAttribute('aria-hidden','false');},450);
+  }
+  var originalOpenLink=window.openLink;
+  if(typeof originalOpenLink==='function'){
+    window.openLink=function(key){
+      try{
+        var shareRelated=String(key||'').indexOf('share')===0;
+        if(key!=='kyc'&&!shareRelated&&sessionStorage.getItem(SHOWN_KEY)!=='1')sessionStorage.setItem(RETURN_KEY,'1');
+      }catch(e){}
+      return originalOpenLink.apply(this,arguments);
+    };
+  }
+  document.getElementById('return-sponsored-open').addEventListener('click',function(){
+    hide();
+    if(typeof originalOpenLink==='function')originalOpenLink('dash1');
+  });
+  document.getElementById('return-sponsored-skip').addEventListener('click',hide);
+  window.addEventListener('focus',show);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)show();});
+})();"""
+
+          if old not in s:
+              raise SystemExit('Target return-popup script was not found; no changes made.')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Remove workflow and commit
+        run: |
+          rm -f .github/workflows/fix-share-return-popup-once.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html .github/workflows/fix-share-return-popup-once.yml
+          git commit -m "Show share return popup only once" || exit 0
+          git push
