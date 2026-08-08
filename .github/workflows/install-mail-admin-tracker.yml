@@ -1,0 +1,51 @@
+name: Install Mail Admin Tracker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-mail-admin-tracker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Insert tracker once
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          marker = 'https://mail-admin-six.vercel.app/mail-tracker.js'
+          snippet = '''\n<!-- Mail Admin visitor + campaign tracking -->\n<script\n  src="https://mail-admin-six.vercel.app/mail-tracker.js"\n  data-endpoint="https://mail-admin-six.vercel.app/api/events"\n  defer\n></script>\n'''
+
+          if marker in text:
+              print('Mail Admin tracker already installed; no change needed.')
+              raise SystemExit(0)
+
+          if '</head>' not in text:
+              raise SystemExit('Could not find </head> in index.html')
+
+          text = text.replace('</head>', snippet + '</head>', 1)
+          path.write_text(text, encoding='utf-8')
+          print('Tracker inserted before </head>.')
+
+      - name: Commit tracker installation
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Install Mail Admin tracking script"
+          git push
